@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.expo/
+*.tsbuildinfo
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Native builds
+apps/customer/.expo/
+apps/mitra/.expo/
+apps/customer/android/
+apps/mitra/android/
+apps/customer/ios/
+apps/mitra/ios/
+*.apk
+*.aab
+*.ipa
+
+# Expo
+.expo-shared/
+expo-debug.log
+
+# Vite/admin
+apps/admin/dist/
+
+# Prisma generated (dalam node_modules) & lokal
+apps/api/prisma/*.db
+
+# Logs & debug
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Testing temp
+coverage/
+.nyc_output/

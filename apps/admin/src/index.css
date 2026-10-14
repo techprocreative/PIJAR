@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Kartu panel standar */
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  /* Label kecil di atas input */
+  .field-label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+
+  /* Input/select standar */
+  .field-input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900
+      placeholder:text-slate-400 focus:border-pijar-500 focus:outline-none
+      focus:ring-2 focus:ring-pijar-200 disabled:bg-slate-100;
+  }
+
+  /* Tombol utama & varian */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
+      transition-colors focus:outline-none focus:ring-2 focus:ring-pijar-300 disabled:cursor-not-allowed
+      disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-pijar-600 text-white hover:bg-pijar-700;
+  }
+  .btn-secondary {
+    @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-700;
+  }
+}

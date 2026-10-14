@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "PIJAR Mitra",
+    "slug": "pijar-mitra",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "pijar-mitra",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F7F5FB",
+    "splash": {
+      "backgroundColor": "#7C3AED",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pijar.mitra",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "PIJAR membutuhkan lokasi untuk menampilkan order terdekat dan melacak perjalanan Anda menuju pelanggan.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Latar belakang lokasi dipakai agar pelanggan tetap melihat posisi Anda saat layar terkunci.",
+        "UIBackgroundModes": ["location", "fetch"]
+      }
+    },
+    "android": {
+      "package": "com.pijar.mitra",
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "WAKE_LOCK"
+      ]
+    },
+    "plugins": [
+      "expo-dev-client",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "PIJAR membutuhkan lokasi untuk menampilkan order terdekat dan melacak perjalanan Anda menuju pelanggan."
+        }
+      ]
+    ],
+    "extra": {
+      "apiUrl": "http://localhost:3001"
+    },
+    "_comment": "Ganti extra.apiUrl dengan LAN IP dev server (mis. http://192.168.1.10:3001) saat menguji di perangkat fisik."
+  }
+}

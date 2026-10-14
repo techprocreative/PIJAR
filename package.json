@@ -1,0 +1,14 @@
+{
+  "name": "pijar",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev:api": "pnpm --filter @pijar/api dev",
+    "dev:customer": "pnpm --filter @pijar/customer start",
+    "dev:mitra": "pnpm --filter @pijar/mitra start",
+    "dev:admin": "pnpm --filter @pijar/admin dev"
+  },
+  "dependencies": {
+    "socket.io-client": "4.8"
+  }
+}

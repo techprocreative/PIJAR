@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "PIJAR",
+    "slug": "pijar-customer",
+    "version": "0.1.0",
+    "scheme": "pijar",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#F97316",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "PIJAR memakai lokasi Anda untuk menentukan alamat pesanan pijat.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "package": "com.pijar.customer",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "INTERNET"
+      ],
+      "usesCleartextTraffic": true
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "_comment": "IP LAN di app.config.ts mengikuti env EXPO_PUBLIC_API_URL"
+  }
+}

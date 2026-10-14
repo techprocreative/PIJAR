@@ -1,0 +1,293 @@
+// PIJAR — Skema database (Prisma / PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Auth & User =====
+
+enum Role {
+  CUSTOMER
+  MITRA
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(uuid())
+  phone         String    @unique
+  name          String
+  role          Role      @default(CUSTOMER)
+  passwordHash  String?
+  photoUrl      String?
+  firebaseToken String? // FCM nantinya; notifikasi via WS untuk MVP
+  refreshToken  String?
+  walletBalance Int       @default(0) // rupiah, integer (tanpa sen)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  customerOrders  Order[]               @relation("CustomerOrders")
+  mitraProfile    MitraProfile?
+  walletTxns      WalletTransaction[]
+  payments        Payment[]
+  ratingsGiven    Rating[]              @relation("Rater")
+  ratingsReceived Rating[]              @relation("Ratee")
+  // Catatan: OtpCode dikaitkan via `phone`, bukan FK ke User — tidak perlu relasi.
+  disputesOpened  Dispute[]             @relation("DisputeOpener")
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  phone     String
+  codeHash  String
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+}
+
+// ===== Mitra =====
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum MitraStatus {
+  OFFLINE
+  ONLINE
+  ON_DUTY
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+model MitraProfile {
+  id             String             @id @default(uuid())
+  userId         String             @unique
+  user           User               @relation(fields: [userId], references: [id])
+  gender         Gender
+  rating         Float              @default(0)
+  ratingCount    Int                @default(0)
+  totalJobs      Int                @default(0)
+  status         MitraStatus        @default(OFFLINE)
+  verification   VerificationStatus @default(PENDING)
+  lastLat        Float?
+  lastLng        Float?
+  lastSeenAt     DateTime?
+  services       ServiceMitra[]
+  documents      MitraDocument[]
+  orders         Order[]            @relation("MitraOrders")
+  bids           Bid[]
+
+  @@index([status, verification])
+}
+
+model MitraDocument {
+  id        String   @id @default(uuid())
+  mitraId   String
+  mitra     MitraProfile @relation(fields: [mitraId], references: [id])
+  type      String // KTP | CERTIFICATE | PHOTO
+  fileUrl   String
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+// ===== Layanan =====
+
+model Service {
+  id              String   @id @default(uuid())
+  name            String
+  description     String
+  durationMinutes Int
+  basePrice       Int // rupiah
+  imageUrl        String?
+  active          Boolean  @default(true)
+  orderItems      Order[]
+  mitras          ServiceMitra[]
+}
+
+model ServiceMitra {
+  serviceId String
+  mitraId   String
+  service   Service       @relation(fields: [serviceId], references: [id])
+  mitra     MitraProfile  @relation(fields: [mitraId], references: [id])
+
+  @@id([serviceId, mitraId])
+}
+
+// ===== Order & Bidding =====
+
+enum OrderStatus {
+  DRAFT
+  BIDDING
+  MATCHED
+  MITRA_ON_THE_WAY
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  SETTLED
+  CANCELLED
+}
+
+model Order {
+  id                String      @id @default(uuid())
+  customerId        String
+  customer          User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  mitraId           String?
+  mitra             MitraProfile? @relation("MitraOrders", fields: [mitraId], references: [id])
+  serviceId         String
+  service           Service     @relation(fields: [serviceId], references: [id])
+  status            OrderStatus @default(DRAFT)
+  addressLabel      String
+  addressDetail     String
+  lat               Float
+  lng               Float
+  scheduledAt       DateTime?
+  customerPrice     Int
+  finalPrice        Int?
+  notes             String?
+  cancelReason      String?
+  genderPreference  Gender?
+  bids              Bid[]
+  payment           Payment?
+  ratings           Rating[]
+  disputes          Dispute[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([status, createdAt])
+  @@index([customerId])
+  @@index([mitraId])
+}
+
+model Bid {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  mitraId     String
+  mitra       MitraProfile @relation(fields: [mitraId], references: [id])
+  price       Int
+  etaMinutes  Int
+  distanceKm  Float
+  status      String   @default("PENDING") // PENDING | ACCEPTED | REJECTED | EXPIRED
+  createdAt   DateTime @default(now())
+
+  @@unique([orderId, mitraId])
+}
+
+// ===== Payment & Wallet =====
+
+enum PaymentMethod {
+  WALLET
+  MIDTRANS_VA
+  MIDTRANS_QRIS
+  MIDTRANS_EWALLET
+  MIDTRANS_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentPurpose {
+  ORDER
+  TOPUP
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  orderId       String?       @unique
+  order         Order?        @relation(fields: [orderId], references: [id])
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  purpose       PaymentPurpose @default(ORDER)
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  amount        Int
+  platformFee   Int           @default(0)
+  midtransOrder String?       @unique // order_id di Midtrans
+  snapUrl       String?
+  payload       Json?         // simpan respon webhook raw
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model WalletTransaction {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  type         String // TOPUP | ORDER_PAYMENT | ORDER_EARNING | REFUND | WITHDRAWAL
+  amount       Int // positif
+  balanceAfter Int
+  description  String
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// ===== Rating & Dispute =====
+
+model Rating {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  raterId   String
+  rater     User     @relation("Rater", fields: [raterId], references: [id])
+  rateeId   String
+  ratee     User     @relation("Ratee", fields: [rateeId], references: [id])
+  stars     Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([orderId, raterId])
+}
+
+model Dispute {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  openedById  String
+  openedBy    User     @relation("DisputeOpener", fields: [openedById], references: [id])
+  reason      String
+  status      String   @default("OPEN") // OPEN | RESOLVED
+  resolution  String?
+  createdAt   DateTime @default(now())
+}
+
+// ===== Promo =====
+
+model Voucher {
+  id           String    @id @default(uuid())
+  code         String    @unique
+  type         String // PERCENT | AMOUNT
+  value        Int
+  minSpend     Int       @default(0)
+  maxDiscount  Int?
+  walletOnly   Boolean   @default(false)
+  active       Boolean   @default(true)
+  validUntil   DateTime
+}
+
+model PromoBanner {
+  id       String  @id @default(uuid())
+  title    String
+  imageUrl String
+  linkUrl  String?
+  active   Boolean @default(true)
+}
